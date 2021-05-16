@@ -109,8 +109,8 @@ def parse_show_page(array, show_type):
 # hashtable, if the file is already in the hashtable then we skip over and go
 # to the next show. Once you are done with all shows, you move to the next show
 def scrape_website():
-    for country in country_list:
-        for page_num in range(1, max_page_num + 1):
+    for country in country_list[:1]:
+        for page_num in range(1, max_page_num + 1 - 49):
             try:
                 if verbose:
                     print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
