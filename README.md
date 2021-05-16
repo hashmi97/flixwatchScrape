@@ -7,7 +7,7 @@ Use this tool to scrape https://www.flixwatch.co/ website
 ### Python packages to install
 `pip install requests bs4 pandas`
 
-You can find the full list of requirements [here.](../blob/main/requirements.txt)
+You can find the full list of requirements [here.](../main/requirements.txt)
 
 
 ### Usage
