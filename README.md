@@ -7,6 +7,9 @@ Use this tool to scrape https://www.flixwatch.co/ website
 ### Python packages to install
 `pip install requests bs4 pandas`
 
+You can find the full list of requirements [here.](../blob/main/requirments.txt)
+
+
 ### Usage
 To use the tool, you can just run the following command
 
@@ -35,8 +38,7 @@ To use the tool, you can just run the following command
  |6|IMDbScore|Float|Either Nan or a float in the range (0,10).|
  |7|MetacriticScore|Float|Either a Nan or a float in the range (0, 100).|
  |8|Age|Float|Either a Nan or a float in the range (3, 18).|
- |9|FamilyFriendly|String|Either Yes or No to signify if the show is family friendly.|
- |10|Year|Int|The year the show was released.|
+ |9|FamilyFriendly|String|Either Yes or No to signify if the show is family friendly.| |10|Year|Int|The year the show was released.|
  |11|Audio|String|The language of the show.|
 
 <a id="Genres"></a>
