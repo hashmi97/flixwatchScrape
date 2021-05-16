@@ -5,8 +5,12 @@ import traceback
 import pandas as pd
 import sys
 import numpy as np
+import argparse
 
 
+# This method pulls the list of available countries from the website and
+# there is a bug at the moment where Mongolia is missing on the website which
+# is why I have it hardcoded
 def get_list_of_countries():
     country_url = "https://www.flixwatch.co/catalogs/"
     country_res = requests.get(country_url)
@@ -22,30 +26,36 @@ def get_list_of_countries():
         countries != "details", np.logical_and(countries != "a", countries !=
                                                "\n"))]
     countries = np.append(countries, 'Mongolia')
-    countries.sort()
+    np.unique(countries).sort()
     return countries
 
 
+# This method gets the maximum number page. It is set as 50 for countries right
+# now but in the case it gets changed or increased then the number is updated
+# here.
 def get_max_page_num():
-    global max_page_num, line
     page_num_url = "https://www.flixwatch.co/catalogue/netflix-usa"
     page_num_res = requests.get(page_num_url)
     page_num_html_page = page_num_res.content
     page_num_soup = BeautifulSoup(page_num_html_page, 'html.parser')
-    max_page_num = 0
+    max_page_n = 0
     for line in page_num_soup.find_all(text=True):
         if line.parent.name == 'a':
             if "Next" in line:
                 break
-            max_page_num = line
-    return max_page_num
+            max_page_n = line
+    return max_page_n
 
 
+# This method parses every show page and extracts the following (Name,
+# description, genre, alternative genres, streaming countries, IMDB and
+# metacritic scores if they exist, whether the show is family friendly, year it
+# was released, age restrictions and audio language) to the dataframe.
 def parse_show_page(array, show_type):
     global df, log_file
     array = array[11:-5]
     show_name = array[0]
-    print('Now working on show {}'.format(show_name), file=std_orig)
+    print('Now working on show {}'.format(show_name), file=log_file)
     print('Now working on show {}'.format(show_name))
     show_description = array[2]
     show_genre = "".join(
@@ -92,30 +102,19 @@ def parse_show_page(array, show_type):
     df.index = df.index + 1
 
 
-if __name__ == '__main__':
-    verbose = True
-    output_path = os.path.join("files", "data.csv")
-    log_file = open(os.path.join("files", "log.txt"), "w", encoding="utf-8")
-    max_page_num = int(get_max_page_num())
-    country_list = get_list_of_countries()
-    shows_hash_table = {}
-    std_orig = sys.stdout
-    sys.stdout = log_file
-
-    df = pd.DataFrame(
-        columns=('Name', 'Type', 'Description', 'Genre', 'AltGenre',
-                 'StreamingCountries', 'IMDbScore',
-                 'MetacriticScore', 'Age', 'FamilyFriendly', 'Year',
-                 'Audio'))
-
+# For every country, go through every show and parse it and then add it to a
+# hashtable, if the file is already in the hashtable then we skip over and go
+# to the next show. Once you are done with all shows, you move to the next show
+def scrape_website():
     for country in country_list:
         for page_num in range(1, max_page_num + 1):
             try:
-                print("Now working on page: {} of country: {}".format(page_num,
-                                                                      country))
+                if verbose:
+                    print("Now working on page: {} of country: {}".format(
+                        page_num, country))
                 print("Now working on page: {} of country: {}".format(page_num,
                                                                       country),
-                      file=std_orig)
+                      file=log_file)
                 url = "https://www.flixwatch.co/catalogue/netflix-{}/?" \
                       "paged={}".format(country.lower().replace(" ", "-"),
                                         page_num)
@@ -144,21 +143,80 @@ if __name__ == '__main__':
                             parse_show_page(show_array, show_type="tvshow")
 
             except Exception as e:
-                print(
-                    'Failed while creating show link table at country = {} and'
-                    ' page_num = {} due to exception {}'.format(country,
-                                                                page_num, e))
+                if verbose:
+                    print(
+                        'Failed while creating show link table at country = '
+                        '{} and page_num = {} due to exception {}'.format(
+                            country, page_num, e))
                 print(
                     'Failed while creating show link table at country = {} and'
                     ' page_num = {} due to exception {}'.format(country,
                                                                 page_num, e),
-                    file=std_orig)
+                    file=log_file)
                 log_file.close()
-                if verbose:
-                    traceback.print_exc(file=std_orig)
-                    traceback.print_exc()
+                traceback.print_exc(file=log_file)
+                traceback.print_exc()
+                sys.exit(0)
 
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(usage="main.py [-h] [-v] [-l LogFile.txt]"
+                                           " [-o Output.csv]",
+                                     description="Scrape www.flixwatch.co"
+                                                 "website and create a csv "
+                                                 "file with the data.")
+    parser.add_argument("-v", "--verbose", action="store_true", help='Setting '
+                        'the Verbose option enables printing the log files to '
+                        'the screen in real time')
+    parser.add_argument('-l', '--log', required=False, default="log.txt",
+                        help='Pass the name of the log file you want to create'
+                             '. The name must end in .txt the default is '
+                             'log.txt ')
+    parser.add_argument('-o', '--out', required=False, default="dataset.csv",
+                        help='Pass the name of the csv file you want to create'
+                             '. The name must end in .csv the default is '
+                             'dataset.csv')
+    io_args = parser.parse_args()
+    verbose = io_args.verbose
+    log_path = io_args.log
+    output_path = io_args.out
+    try:
+        if not log_path.endswith(".txt"):
+            raise IOError
+        log_file = open(log_path, "w", encoding="utf-8")
+    except IOError:
+        if verbose:
+            print("Was not able to create the log file")
+            traceback.print_exc()
+        sys.exit(0)
+    try:
+        if not output_path.endswith(".csv"):
+            raise IOError
+        elif os.path.isfile(output_path):
+            csv_file = open(output_path, "w")
+            csv_file.close()
+    except IOError:
+        if verbose:
+            print("Was not able to create the csv file")
+            traceback.print_exc()
+            sys.exit(0)
+    # print(verbose)
+    # print(log_path)
+    # print(output_path)
+    # sys.exit(25)
+    max_page_num = int(get_max_page_num())
+    country_list = get_list_of_countries()
+    shows_hash_table = {}
+    df = pd.DataFrame(
+        columns=('Name', 'Type', 'Description', 'Genre', 'AltGenre',
+                 'StreamingCountries', 'IMDbScore',
+                 'MetacriticScore', 'Age', 'FamilyFriendly', 'Year',
+                 'Audio'))
+    scrape_website()
     df = df.sort_index()
-    sys.stdout = std_orig
-    log_file.close()
     df.to_csv(output_path, index=False)
+    if verbose:
+        print("File {} was created.".format(output_path))
+    print("File {} was created.".format(output_path), file=log_file)
+    log_file.close()
+    sys.exit(1)
