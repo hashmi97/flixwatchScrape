@@ -6,7 +6,7 @@ import pandas as pd
 import sys
 import numpy as np
 import argparse
-import time
+from datetime import datetime
 
 
 # This method pulls the list of available countries from the website and
@@ -56,9 +56,9 @@ def parse_show_page(array, show_type):
     global df, log_file
     array = array[11:-5]
     show_name = array[0]
-    print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ', time.gmtime()) +
+    print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ') +
           'Now working on show {}'.format(show_name), file=log_file)
-    print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ', time.gmtime()) +
+    print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ') +
           'Now working on show {}'.format(show_name))
     show_description = array[2]
     show_genre = ''.join(
@@ -109,17 +109,15 @@ def parse_show_page(array, show_type):
 # hashtable, if the file is already in the hashtable then we skip over and go
 # to the next show. Once you are done with all shows, you move to the next show
 def scrape_website():
-    for country in country_list[:1]:
-        for page_num in range(1, max_page_num + 1 - 49):
+    for country in country_list:
+        for page_num in range(1, max_page_num + 1):
             try:
                 if verbose:
-                    print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
-                          time.gmtime()) + 'Now working on page {} of '
-                                           'country {}'.format(
+                    print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ')
+                          + 'Now working on page {} of country {}'.format(
                                                          page_num, country))
-                print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
-                                    time.gmtime()) + 'Now working on page {}'
-                                                     ' of country {}'.format(
+                print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ') +
+                      'Now working on page {} of country {}'.format(
                                     page_num, country), file=log_file)
                 url = 'https://www.flixwatch.co/catalogue/netflix-{}/?' \
                       'paged={}'.format(country.lower().replace(' ', '-'),
@@ -150,16 +148,16 @@ def scrape_website():
 
             except Exception as e:
                 if verbose:
-                    print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
-                          time.gmtime()) + 'Failed while creating show link '
-                                           'table at country = {} and  '
-                                           'page_num = {} due to exception {}'
+                    print(datetime.strftime('[%d/%m/%Y %H:%M:%S]: ',
+                                            datetime.now())
+                          + 'Failed while creating show link table at country '
+                            '= {} and page_num = {} due to exception {}'
                           .format(country, page_num, e))
-                print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
-                      time.gmtime()) + 'Failed while creating show link table '
-                                       'at country = {} and  page_num = {} due'
-                                       ' to exception {}'.format(country,
-                                                                 page_num, e),
+                print(datetime.strftime('[%d/%m/%Y %H:%M:%S]: ',
+                                        datetime.now())
+                      + 'Failed while creating show link table at country '
+                        '= {} and page_num = {} due to exception {}'
+                      .format(country, page_num, e),
                       file=log_file)
                 log_file.close()
                 traceback.print_exc(file=log_file)
@@ -220,10 +218,10 @@ if __name__ == '__main__':
     df = df.sort_index()
     df.to_csv(output_path, index=False)
     if verbose:
-        print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ', time.gmtime()) +
-              'File {} was created.'.format(output_path))
-    print(time.strftime('[%d/%m/%Y %H:%M:%S %zGMT]: ',
-                        time.gmtime()) + 'File {} was created.'
+        print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ')
+              + 'File {} was created.'.format(output_path))
+    print(datetime.now().strftime('[%d/%m/%Y %H:%M:%S]: ')
+          + 'File {} was created.'
           .format(output_path), file=log_file)
     log_file.close()
     sys.exit(1)

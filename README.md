@@ -13,7 +13,7 @@ You can find the full list of requirements [here.](../main/requirements.txt)
 ### Usage
 To use the tool, you can just run the following command
 
-`main.py [-h] [-v] [-l LogFile.txt] [-o Output.csv]`
+`python main.py [-h] [-v] [-l LogFile.txt] [-o Output.csv]`
 
 - This will create two files, `LogFile.txt` which will hold log detailing what 
   countries were covered at what time and what shows were printed.
